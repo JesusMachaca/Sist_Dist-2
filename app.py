@@ -24,6 +24,9 @@ try:
 except Exception as e:
     print(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
 
+global alumno
+alumno = None
+
 @app.route('/')
 def Index():
     publicaciones = consultarTodasPublicaciones()
@@ -35,26 +38,25 @@ def page_registro_publicacion():
 
 @app.route('/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
+    global alumno
     if request.method == 'POST':
-        if 'usuario' in session:
-            try:
-                fecha = str(datetime.datetime.now())
-                idAlumno = session['usuario']['id']
-                contenido = request.form['contenido']
+        try:
+            fecha = str(datetime.datetime.now())
+            idAlumno = alumno[0]
+            contenido = request.form['contenido']
 
-                cursor = mydb.cursor()
-                query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
-                values = (idAlumno, contenido, fecha)
-                cursor.execute(query, values)
-                mydb.commit()
-                cursor.close()
+            cursor = mydb.cursor()
+            query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
+            values = (idAlumno, contenido, fecha)
+            cursor.execute(query, values)
+            mydb.commit()
+            cursor.close()
 
-                flash("Se ha registrado de manera correcta!")
-            except Exception as e:
-                flash(f"Error al realizar el registro: {e}")
-        else:
-            flash("Debe iniciar sesión para publicar.")
-    
+            flash("Se ha registrado de manera correcta!")
+        except Exception as e:
+            flash(f"Error al realizar el registro: {e}")
+            return render_template('registro-publicacion.html')
+
     return render_template('registro-publicacion.html')
 
 @app.route('/registro-usuario')
@@ -80,6 +82,7 @@ def agregar_usuario():
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
         except Exception as e:
             flash("Error al realizar el registro: {}".format(e))
+            return render_template('registro-usuario.html')
 
     return render_template('registro-usuario.html')
 
@@ -89,6 +92,7 @@ def login_render():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    global alumno
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
@@ -100,15 +104,22 @@ def login():
         cursor.close()
 
         if alumno:
-            session['usuario'] = {
-                'id': alumno[0],
-                'nombre': alumno[1],
-                'apellido': alumno[2],
-                'correo': alumno[3],
-                'codigo': alumno[4]
-            }
-            flash("Inicio de sesión exitoso!")
-            return redirect(url_for('dashboard'))
+            fecha = str(datetime.datetime.now())
+            
+            try:
+                cursor = mydb.cursor()
+                idAlumno = alumno[0]
+
+                query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
+                values = (idAlumno, fecha)
+                cursor.execute(query, values)
+                mydb.commit()
+                cursor.close()
+
+                session['logged_in'] = True
+                return redirect(url_for('dashboard'))
+            except Exception as e:
+                flash(f"Error al registrar Log: {e}")
         else:
             flash("Error de autenticación")
 
@@ -117,18 +128,21 @@ def login():
 
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
-    session.pop('usuario', None)
+    global alumno
+    alumno = None
+    session.pop('logged_in', None)
     return redirect(url_for('Index'))
 
 @app.route('/dashboard')
 def dashboard():
-    if 'usuario' in session:
-        idAlumno = session['usuario']['id']
+    global alumno
+    publicaciones = None
+    sesiones = None
+    if alumno is not None:
+        idAlumno = alumno[0]
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
-        return render_template('dashboard.html', alumno=session['usuario'], publicaciones=publicaciones, sesiones=sesiones)
-    else:
-        return redirect(url_for('login_render'))
+    return render_template('dashboard.html', alumno=alumno, publicaciones=publicaciones, sesiones=sesiones)
 
 def consultarTodasPublicaciones():
     try:
