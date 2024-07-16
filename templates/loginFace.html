@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+{% with mensajes = get_flashed_messages() %}
+{% if mensajes %}
+{% for mensaje in mensajes %}
+<div class="card card-body">
+    <p>{{ mensaje }}</p>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="container-fluid">
+    <h1>Inicio de Sesión</h1>
+    <div class="card card-body">
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="correo">Correo institucional:</label>
+                <input type="email" id="correo" name="correo" class="form-control" placeholder="Correo institucional" required>
+            </div>
+            <div class="form-group">
+                <label for="codigo">Código de estudiante:</label>
+                <input type="text" id="codigo" name="codigo" class="form-control" placeholder="Código de estudiante" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Iniciar sesión</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

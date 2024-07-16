@@ -1,0 +1,103 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="container">
+    <div class="row content-md-center">
+        <div class="col">
+            <div class="card card-body" >
+                <h3 class="card-title" >Datos de perfil</h3>
+                <div class="row content-md-center">
+                    <div class="col">
+                        <div class="row justify-content-md-center pb-2">
+                            <div class="col-md-auto">
+                                <p>Foto de perfil</p>
+                                <img src="https://w7.pngwing.com/pngs/152/932/png-transparent-silhouette-person-graphy-silhouette-animals-rectangle-photography.png" alt="Foto de perfil" style="width: 300px; height: 300px; border-radius: 50%;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        {% if alumno %}
+                        <p class="text-secondary-emphasis">Nombre</p>
+                        <p class="text-secondary">{{alumno[1]}}</p>
+                        <p class="text-secondary-emphasis">Apellido</p>
+                        <p class="text-secondary">{{alumno[2]}}</p>
+                        <p class="text-secondary-emphasis">Correo institucional</p>
+                        <p class="text-secondary">{{alumno[3]}}</p>
+                        <p class="text-secondary-emphasis">Código de estudiante</p>
+                        <p class="text-secondary">{{alumno[4]}}</p>
+                        {% else%}
+                        <p class="text-warning">No hay datos registrados</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card card-body">
+                <h3 class="card-title" >Registro de publicaciones</h3>
+                <table class="table table-hover">
+                    <thead>
+                      <tr class="table-primary">
+                        <th scope="col">Contenido</th>
+                        <th scope="col">Fecha</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if publicaciones %}
+                      {% for publicacion in publicaciones %}
+                        <tr class="table-light">
+                          <td>{{publicacion[0]}}</td>
+                          <td>{{publicacion[1]}}</td>
+                        </tr>
+                      {% endfor %}
+                      {% else %}
+                      <tr class="table-light">
+                          <td>-</td>
+                          <td>-</td>
+                      </tr>
+                      {% endif %}
+                      </tbody>
+                    </table>
+              </div>
+  
+              <div>
+                  <p>
+  
+                  </p>
+              </div>
+              <div class="card card-body">
+                  <h3 class="card-title" >Registro de Sesiones</h3>
+                  <table class="table table-hover">
+                      <thead>
+                        <tr class="table-primary">
+                          <th scope="col">ID</th>
+                          <th scope="col">Fecha</th>
+                        </tr>
+                      </thead>
+                      
+                      <tbody>
+                      {% if sesiones %}
+                      {% for sesion in sesiones %}
+                        <tr class="table-light">
+                          <td>{{sesion[0]}}</td>
+                          <td>{{sesion[1]}}</td>
+                        </tr>
+                      {% endfor %}
+                      {% else %}
+                        <tr class="table-light">
+                          <td>-</td>
+                          <td>-</td>
+                        </tr>
+                      {% endif %}
+                      </tbody>
+                    </table>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+  
+  
+  
+  {% endblock %}

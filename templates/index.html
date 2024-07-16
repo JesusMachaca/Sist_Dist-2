@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="col-auto">
+    {% if publicaciones %}
+        {% for publicacion in publicaciones %}
+            <div class="card card-body mb-3">
+                <h4 class="card-title">{{ publicacion[0] }}</h4>
+                <h6 class="card-subtitle mb-2 text-muted">{{ publicacion[1] }}</h6>
+                <p class="card-text">{{ publicacion[2] }}</p>
+                <p class="text-secondary"> ({{ publicacion[3] }})</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="card card-body">
+            <h4 class="card-title">No hay publicaciones</h4>
+            <h6 class="card-subtitle mb-2 text-muted">-</h6>
+            <p class="card-text">-</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
