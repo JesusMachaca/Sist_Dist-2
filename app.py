@@ -15,11 +15,11 @@ conn_str = {
 }
 
 # Conexión a la base de datos PostgreSQL
-mydb = psycopg2.connect(**conn_str)
-
-# Variable global para almacenar el usuario actualmente autenticado
-global alumno
-alumno = None
+try:
+    mydb = psycopg2.connect(**conn_str)
+    print("Conexión exitosa a la base de datos PostgreSQL")
+except Exception as e:
+    print(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
 
 @app.route('/')
 def Index():
@@ -28,16 +28,19 @@ def Index():
 
 @app.route('/registro-publicacion')
 def page_registro_publicacion():
-    return render_template('registro-publicacion.html')
+    if 'logged_in' in session:
+        return render_template('registro-publicacion.html')
+    else:
+        flash("Debe iniciar sesión para agregar una publicación.")
+        return redirect(url_for('login_render'))
 
 @app.route('/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
-    global alumno
-    if request.method == 'POST':
-        try:
-            if 'logged_in' in session:
+    if 'logged_in' in session:
+        if request.method == 'POST':
+            try:
                 fecha = str(datetime.datetime.now())
-                idAlumno = alumno[0]
+                idAlumno = session['usuario_id']
                 contenido = request.form['contenido']
 
                 cursor = mydb.cursor()
@@ -48,12 +51,12 @@ def agregar_publicacion():
                 cursor.close()
 
                 flash("Se ha registrado de manera correcta!")
-            else:
-                flash("Debe iniciar sesión para agregar una publicación.")
-        except Exception as e:
-            flash(f"Error al realizar el registro: {e}")
-
-    return render_template('registro-publicacion.html')
+            except Exception as e:
+                flash(f"Error al realizar el registro: {e}")
+        return redirect(url_for('page_registro_publicacion'))
+    else:
+        flash("Debe iniciar sesión para agregar una publicación.")
+        return redirect(url_for('login_render'))
 
 @app.route('/registro-usuario')
 def registro_usuario():
@@ -87,7 +90,6 @@ def login_render():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    global alumno
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
@@ -100,7 +102,7 @@ def login():
 
         if alumno:
             fecha = str(datetime.datetime.now())
-            
+
             try:
                 cursor = mydb.cursor()
                 idAlumno = alumno[0]
@@ -112,6 +114,9 @@ def login():
                 cursor.close()
 
                 session['logged_in'] = True
+                session['usuario_id'] = alumno[0]
+                session['nombre'] = alumno[1]
+                flash("Inicio de sesión exitoso!")
                 return redirect(url_for('dashboard'))
             except Exception as e:
                 flash(f"Error al registrar Log: {e}")
@@ -122,25 +127,22 @@ def login():
 
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
-    global alumno
-    alumno = None
     session.pop('logged_in', None)
+    session.pop('usuario_id', None)
+    session.pop('nombre', None)
+    flash("Sesión cerrada correctamente.")
     return redirect(url_for('Index'))
 
 @app.route('/dashboard')
 def dashboard():
-    global alumno
-    publicaciones = None
-    sesiones = None
-    if 'logged_in' in session and alumno is not None:
-        idAlumno = alumno[0]
+    if 'logged_in' in session:
+        idAlumno = session['usuario_id']
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
+        return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones)
     else:
-        flash("Acceso no autorizado, por favor inicia sesión")
-        return redirect(url_for('login'))
-
-    return render_template('dashboard.html', alumno=alumno, publicaciones=publicaciones, sesiones=sesiones)
+        flash("Debe iniciar sesión para acceder al dashboard.")
+        return redirect(url_for('login_render'))
 
 def consultarTodasPublicaciones():
     try:
