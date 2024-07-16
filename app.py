@@ -2,14 +2,11 @@ import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 import datetime
 import psycopg2
-from psycopg2 import sql
 
 app = Flask(__name__)
-
-# SETTINGS
 app.secret_key = "mysecretkey"
 
-# Configuración de la conexión para PostgreSQL
+# Configuración de conexión para PostgreSQL
 conn_str = {
     "host": "dpg-cqarlkuehbks73de8dlg-a.oregon-postgres.render.com",
     "database": "bdfisitweet",
@@ -17,13 +14,10 @@ conn_str = {
     "password": "4fPiWKsmtrNfCeHEEo2jBVIP7jvLGAn3"
 }
 
-# Conectar a la base de datos PostgreSQL
-try:
-    mydb = psycopg2.connect(**conn_str)
-    print("Conexión exitosa a la base de datos PostgreSQL")
-except Exception as e:
-    print(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
+# Conexión a la base de datos PostgreSQL
+mydb = psycopg2.connect(**conn_str)
 
+# Variable global para almacenar el usuario actualmente autenticado
 global alumno
 alumno = None
 
@@ -41,21 +35,23 @@ def agregar_publicacion():
     global alumno
     if request.method == 'POST':
         try:
-            fecha = str(datetime.datetime.now())
-            idAlumno = alumno[0]
-            contenido = request.form['contenido']
+            if 'logged_in' in session:
+                fecha = str(datetime.datetime.now())
+                idAlumno = alumno[0]
+                contenido = request.form['contenido']
 
-            cursor = mydb.cursor()
-            query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
-            values = (idAlumno, contenido, fecha)
-            cursor.execute(query, values)
-            mydb.commit()
-            cursor.close()
+                cursor = mydb.cursor()
+                query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
+                values = (idAlumno, contenido, fecha)
+                cursor.execute(query, values)
+                mydb.commit()
+                cursor.close()
 
-            flash("Se ha registrado de manera correcta!")
+                flash("Se ha registrado de manera correcta!")
+            else:
+                flash("Debe iniciar sesión para agregar una publicación.")
         except Exception as e:
             flash(f"Error al realizar el registro: {e}")
-            return render_template('registro-publicacion.html')
 
     return render_template('registro-publicacion.html')
 
@@ -82,7 +78,6 @@ def agregar_usuario():
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
         except Exception as e:
             flash("Error al realizar el registro: {}".format(e))
-            return render_template('registro-usuario.html')
 
     return render_template('registro-usuario.html')
 
@@ -125,7 +120,6 @@ def login():
 
     return render_template('loginFace.html')
 
-
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
     global alumno
@@ -138,10 +132,14 @@ def dashboard():
     global alumno
     publicaciones = None
     sesiones = None
-    if alumno is not None:
+    if 'logged_in' in session and alumno is not None:
         idAlumno = alumno[0]
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
+    else:
+        flash("Acceso no autorizado, por favor inicia sesión")
+        return redirect(url_for('login'))
+
     return render_template('dashboard.html', alumno=alumno, publicaciones=publicaciones, sesiones=sesiones)
 
 def consultarTodasPublicaciones():
@@ -190,17 +188,6 @@ def consultarSesiones(idAlumno):
         return resultados
     except Exception as e:
         flash(f"Error al consultar sesiones: {e}")
-        return None
-
-def getAlumnos():
-    try:
-        cursor = mydb.cursor()
-        cursor.execute("SELECT idAlumno, nombre, apellido, correo, codigo, imagen, imagenEncoding FROM alumnos")
-        alumnos = cursor.fetchall()
-        cursor.close()
-        return alumnos
-    except Exception as e:
-        flash(f"Error al consultar alumnos: {e}")
         return None
 
 if __name__ == "__main__":
