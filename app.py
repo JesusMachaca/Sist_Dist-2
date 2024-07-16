@@ -24,42 +24,40 @@ try:
 except Exception as e:
     print(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
 
+global alumno
+alumno = None
+
 @app.route('/')
-def index():
-    publicaciones = consultar_todas_publicaciones()
+def Index():
+    publicaciones = consultarTodasPublicaciones()
     return render_template('index.html', publicaciones=publicaciones)
 
 @app.route('/registro-publicacion')
 def page_registro_publicacion():
-    if 'usuario' in session:
-        return render_template('registro-publicacion.html')
-    else:
-        flash("Debe iniciar sesión para acceder.")
-        return redirect(url_for('login_render'))
+    return render_template('registro-publicacion.html')
 
 @app.route('/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
-    if 'usuario' in session:
-        if request.method == 'POST':
-            try:
-                fecha = str(datetime.datetime.now())
-                id_alumno = session['usuario']['id']
-                contenido = request.form['contenido']
+    global alumno
+    if request.method == 'POST':
+        try:
+            fecha = str(datetime.datetime.now())
+            idAlumno = alumno[0]
+            contenido = request.form['contenido']
 
-                cursor = mydb.cursor()
-                query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
-                values = (id_alumno, contenido, fecha)
-                cursor.execute(query, values)
-                mydb.commit()
-                cursor.close()
+            cursor = mydb.cursor()
+            query = "INSERT INTO publicaciones (idAlumno, contenido, fecha) VALUES (%s, %s, %s)"
+            values = (idAlumno, contenido, fecha)
+            cursor.execute(query, values)
+            mydb.commit()
+            cursor.close()
 
-                flash("Se ha registrado de manera correcta!")
-            except Exception as e:
-                flash(f"Error al realizar el registro: {e}")
-        return redirect(url_for('page_registro_publicacion'))
-    else:
-        flash("Debe iniciar sesión para publicar.")
-        return redirect(url_for('login_render'))
+            flash("Se ha registrado de manera correcta!")
+        except Exception as e:
+            flash(f"Error al realizar el registro: {e}")
+            return render_template('registro-publicacion.html')
+
+    return render_template('registro-publicacion.html')
 
 @app.route('/registro-usuario')
 def registro_usuario():
@@ -84,6 +82,7 @@ def agregar_usuario():
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
         except Exception as e:
             flash("Error al realizar el registro: {}".format(e))
+            return render_template('registro-usuario.html')
 
     return render_template('registro-usuario.html')
 
@@ -93,6 +92,7 @@ def login_render():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    global alumno
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
@@ -104,39 +104,47 @@ def login():
         cursor.close()
 
         if alumno:
-            session['usuario'] = {
-                'id': alumno[0],
-                'nombre': alumno[1],
-                'apellido': alumno[2],
-                'correo': alumno[3],
-                'codigo': alumno[4]
-            }
-            flash("Inicio de sesión exitoso!")
-            return redirect(url_for('dashboard'))
+            fecha = str(datetime.datetime.now())
+            
+            try:
+                cursor = mydb.cursor()
+                idAlumno = alumno[0]
+
+                query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
+                values = (idAlumno, fecha)
+                cursor.execute(query, values)
+                mydb.commit()
+                cursor.close()
+
+                session['logged_in'] = True
+                return redirect(url_for('dashboard'))
+            except Exception as e:
+                flash(f"Error al registrar Log: {e}")
         else:
             flash("Error de autenticación")
 
     return render_template('loginFace.html')
 
 
-@app.route('/logout')
+@app.route('/logout', methods=['POST', 'GET'])
 def logout():
-    session.pop('usuario', None)
-    flash("Sesión cerrada exitosamente.")
-    return redirect(url_for('index'))
+    global alumno
+    alumno = None
+    session.pop('logged_in', None)
+    return redirect(url_for('Index'))
 
 @app.route('/dashboard')
 def dashboard():
-    if 'usuario' in session:
-        id_alumno = session['usuario']['id']
-        publicaciones = consultar_publicaciones(id_alumno=id_alumno)
-        sesiones = consultar_sesiones(id_alumno=id_alumno)
-        return render_template('dashboard.html', alumno=session['usuario'], publicaciones=publicaciones, sesiones=sesiones)
-    else:
-        flash("Debe iniciar sesión para acceder al dashboard.")
-        return redirect(url_for('login_render'))
+    global alumno
+    publicaciones = None
+    sesiones = None
+    if alumno is not None:
+        idAlumno = alumno[0]
+        publicaciones = consultarPublicaciones(idAlumno=idAlumno)
+        sesiones = consultarSesiones(idAlumno=idAlumno)
+    return render_template('dashboard.html', alumno=alumno, publicaciones=publicaciones, sesiones=sesiones)
 
-def consultar_todas_publicaciones():
+def consultarTodasPublicaciones():
     try:
         cursor = mydb.cursor()
         query = '''
@@ -152,14 +160,14 @@ def consultar_todas_publicaciones():
         flash(f"Error al consultar publicaciones: {e}")
         return None
 
-def consultar_publicaciones(id_alumno):
+def consultarPublicaciones(idAlumno):
     try:
         cursor = mydb.cursor()
         query = '''
             SELECT contenido, fecha
             FROM publicaciones WHERE idAlumno = %s
         '''
-        values = (id_alumno,)
+        values = (idAlumno,)
         cursor.execute(query, values)
         resultados = cursor.fetchall()
         cursor.close()
@@ -168,14 +176,14 @@ def consultar_publicaciones(id_alumno):
         flash(f"Error al consultar publicaciones: {e}")
         return None
 
-def consultar_sesiones(id_alumno):
+def consultarSesiones(idAlumno):
     try:
         cursor = mydb.cursor()
         query = '''
             SELECT idLog, fecha
             FROM logs WHERE idAlumno = %s
         '''
-        values = (id_alumno,)
+        values = (idAlumno,)
         cursor.execute(query, values)
         resultados = cursor.fetchall()
         cursor.close()
@@ -184,7 +192,7 @@ def consultar_sesiones(id_alumno):
         flash(f"Error al consultar sesiones: {e}")
         return None
 
-def get_alumnos():
+def getAlumnos():
     try:
         cursor = mydb.cursor()
         cursor.execute("SELECT idAlumno, nombre, apellido, correo, codigo, imagen, imagenEncoding FROM alumnos")
