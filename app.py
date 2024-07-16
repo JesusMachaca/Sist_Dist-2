@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
+from flask_session import Session
 import datetime
 import psycopg2
 from psycopg2 import sql
@@ -8,6 +9,10 @@ app = Flask(__name__)
 
 # SETTINGS
 app.secret_key = "mysecretkey"
+
+# Configuración de la sesión
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 # Configuración de la conexión para PostgreSQL
 conn_str = {
@@ -24,9 +29,6 @@ try:
 except Exception as e:
     print(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
 
-global alumno
-alumno = None
-
 @app.route('/')
 def Index():
     publicaciones = consultarTodasPublicaciones()
@@ -38,11 +40,10 @@ def page_registro_publicacion():
 
 @app.route('/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
-    global alumno
-    if request.method == 'POST':
+    if 'alumno' in session:
         try:
             fecha = str(datetime.datetime.now())
-            idAlumno = alumno[0]
+            idAlumno = session['alumno'][0]
             contenido = request.form['contenido']
 
             cursor = mydb.cursor()
@@ -56,6 +57,8 @@ def agregar_publicacion():
         except Exception as e:
             flash(f"Error al realizar el registro: {e}")
             return render_template('registro-publicacion.html')
+    else:
+        flash("Debes iniciar sesión para agregar una publicación")
 
     return render_template('registro-publicacion.html')
 
@@ -92,7 +95,6 @@ def login_render():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    global alumno
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
@@ -117,6 +119,7 @@ def login():
                 cursor.close()
 
                 session['logged_in'] = True
+                session['alumno'] = alumno
                 return redirect(url_for('dashboard'))
             except Exception as e:
                 flash(f"Error al registrar Log: {e}")
@@ -125,24 +128,22 @@ def login():
 
     return render_template('loginFace.html')
 
-
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
-    global alumno
-    alumno = None
     session.pop('logged_in', None)
+    session.pop('alumno', None)
     return redirect(url_for('Index'))
 
 @app.route('/dashboard')
 def dashboard():
-    global alumno
-    publicaciones = None
-    sesiones = None
-    if alumno is not None:
-        idAlumno = alumno[0]
+    if 'alumno' in session:
+        idAlumno = session['alumno'][0]
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
-    return render_template('dashboard.html', alumno=alumno, publicaciones=publicaciones, sesiones=sesiones)
+        return render_template('dashboard.html', alumno=session['alumno'], publicaciones=publicaciones, sesiones=sesiones)
+    else:
+        flash("Debes iniciar sesión para ver el dashboard")
+        return redirect(url_for('login_render'))
 
 def consultarTodasPublicaciones():
     try:
