@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
-from flask_session import Session
+from flask_session_cookie_manager import Session
 import datetime
 import psycopg2
 from psycopg2 import sql
@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 # SETTINGS
 app.secret_key = "mysecretkey"
+app.config['SESSION_TYPE'] = 'filesystem'
 
 # Configuración de la sesión
 app.config['SESSION_TYPE'] = 'filesystem'
