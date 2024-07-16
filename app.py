@@ -39,8 +39,8 @@ def page_registro_publicacion():
 
 @app.route('/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
-    if request.method == 'POST':
-        if 'usuario' in session:
+    if 'usuario' in session:
+        if request.method == 'POST':
             try:
                 fecha = str(datetime.datetime.now())
                 id_alumno = session['usuario']['id']
@@ -56,10 +56,10 @@ def agregar_publicacion():
                 flash("Se ha registrado de manera correcta!")
             except Exception as e:
                 flash(f"Error al realizar el registro: {e}")
-        else:
-            flash("Debe iniciar sesión para publicar.")
-
-    return redirect(url_for('page_registro_publicacion'))
+        return redirect(url_for('page_registro_publicacion'))
+    else:
+        flash("Debe iniciar sesión para publicar.")
+        return redirect(url_for('login_render'))
 
 @app.route('/registro-usuario')
 def registro_usuario():
