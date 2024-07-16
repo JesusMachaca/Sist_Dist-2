@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 import datetime
 import psycopg2
@@ -202,5 +203,6 @@ def getAlumnos():
         flash(f"Error al consultar alumnos: {e}")
         return None
 
-if __name__ == '__main__':
-    app.run(port=3000, debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 3000))
+    app.run(host="0.0.0.0", port=port, debug=True)
