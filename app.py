@@ -110,7 +110,6 @@ def login():
                 query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
                 values = (idAlumno, fecha)
                 cursor.execute(query, values)
-                mydb.commit()
                 cursor.close()
 
                 session['logged_in'] = True
@@ -139,7 +138,15 @@ def dashboard():
         idAlumno = session['usuario_id']
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
-        return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones)
+
+        # Recuperar información del perfil del usuario
+        cursor = mydb.cursor()
+        query = "SELECT nombre, apellido, correo FROM alumnos WHERE idAlumno = %s"
+        cursor.execute(query, (idAlumno,))
+        usuario = cursor.fetchone()
+        cursor.close()
+
+        return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario)
     else:
         flash("Debe iniciar sesión para acceder al dashboard.")
         return redirect(url_for('login_render'))
