@@ -158,6 +158,7 @@ def consultarTodasPublicaciones():
             SELECT alumnos.nombre, alumnos.correo, publicaciones.contenido, publicaciones.fecha
             FROM alumnos
             JOIN publicaciones ON alumnos.idAlumno = publicaciones.idAlumno
+            ORDER BY publicaciones.fecha DESC
         '''
         cursor.execute(query)
         resultados = cursor.fetchall()
