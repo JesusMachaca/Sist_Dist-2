@@ -26,7 +26,7 @@ def Index():
     publicaciones = consultarTodasPublicaciones()
     return render_template('index.html', publicaciones=publicaciones)
 
-@app.route('/registro-publicacion')
+@app.route('/publicaciones/registro-publicacion')
 def page_registro_publicacion():
     if 'logged_in' in session:
         return render_template('registro-publicacion.html')
@@ -34,7 +34,7 @@ def page_registro_publicacion():
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
 
-@app.route('/agregar-publicacion', methods=['POST'])
+@app.route('/publicaciones/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
     if 'logged_in' in session:
         if request.method == 'POST':
@@ -58,11 +58,11 @@ def agregar_publicacion():
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
 
-@app.route('/registro-usuario')
+@app.route('/autenticacion/registro-usuario')
 def registro_usuario():
     return render_template('registro-usuario.html')
 
-@app.route('/agregar-usuario', methods=['POST'])
+@app.route('/autenticacion/agregar-usuario', methods=['POST'])
 def agregar_usuario():
     if request.method == 'POST':
         try:
@@ -84,7 +84,7 @@ def agregar_usuario():
 
     return render_template('registro-usuario.html')
 
-@app.route('/login-face')
+@app.route('/autenticacion/login-face')
 def login_render():
     return render_template('loginFace.html')
 
@@ -124,7 +124,7 @@ def login():
 
     return render_template('loginFace.html')
 
-@app.route('/logout', methods=['POST', 'GET'])
+@app.route('/autenticacion/logout', methods=['POST', 'GET'])
 def logout():
     session.pop('logged_in', None)
     session.pop('usuario_id', None)
@@ -132,7 +132,7 @@ def logout():
     flash("Sesión cerrada correctamente.")
     return redirect(url_for('Index'))
 
-@app.route('/dashboard')
+@app.route('/autenticacion/dashboard')
 def dashboard():
     if 'logged_in' in session:
         idAlumno = session['usuario_id']
