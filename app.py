@@ -71,10 +71,10 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
-            contraseña = request.form['contraseña']
+            password = request.form['password']  # Aquí está correcto porque es el nombre en el formulario
 
             # Hashing de la contraseña
-            hashed_password = bcrypt.hashpw(contraseña.encode('utf-8'), bcrypt.gensalt())
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
             cursor = mydb.cursor()
             query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
@@ -98,7 +98,7 @@ def login():
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
-        contraseña = request.form['contraseña']
+        password = request.form['password']  # Esto viene del formulario HTML
 
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
@@ -108,8 +108,8 @@ def login():
         cursor.close()
 
         if alumno:
-            hashed_password = alumno[4]  # Suponiendo que la contraseña está en la columna 5
-            if bcrypt.checkpw(contraseña.encode('utf-8'), hashed_password.encode('utf-8')):
+            hashed_password = alumno[4]  # Asegúrate de que 'contraseña' esté en la columna 5
+            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                 fecha = str(datetime.datetime.now())
 
                 try:
@@ -134,7 +134,6 @@ def login():
             flash("Error de autenticación")
             
     return render_template('loginFace.html')
-
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
 def logout():
