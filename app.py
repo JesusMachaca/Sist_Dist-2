@@ -91,22 +91,28 @@ def agregar_usuario():
 def login_render():
     return render_template('loginFace.html')
 
-@app.route('/autenticacion/login', methods=['GET', 'POST'])
+@app.route('/autenticacion/login', methods=['POST'])
 def login():
     if request.method == 'POST':
-        correo = request.form['correo']
-        codigo = request.form['codigo']
-        password = request.form['password']  # Contraseña ingresada por el usuario
+        correo = request.form.get('correo')  # Obtén el valor del campo 'correo'
+        codigo = request.form.get('codigo')  # Obtén el valor del campo 'codigo'
+        password = request.form.get('password')  # Obtén el valor del campo 'password' (contraseña)
 
+        # Asegúrate de que todos los campos estén obteniendo sus valores correctamente
+        if not correo or not codigo or not password:
+            flash("Todos los campos son obligatorios.")
+            return render_template('loginFace.html')
+
+        # Consulta para obtener los datos del usuario
         cursor = mydb.cursor()
-        query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s AND contraseña = %s"
-        cursor.execute(query, (correo, codigo, password))
+        query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
+        cursor.execute(query, (correo, codigo))
         alumno = cursor.fetchone()
         cursor.close()
 
         if alumno:
-            stored_password = alumno[4]  # Contraseña almacenada en texto plano
-            if password == stored_password:  # Comparar directamente las contraseñas en texto plano
+            stored_password = alumno[4]  # La contraseña almacenada en la base de datos
+            if password == stored_password:  # Comparar directamente las contraseñas
                 session['logged_in'] = True
                 session['usuario_id'] = alumno[0]
                 session['nombre'] = alumno[1]
