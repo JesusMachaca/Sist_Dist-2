@@ -59,6 +59,60 @@ def agregar_publicacion():
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
 
+@app.route('/mensajes/enviar', methods=['POST'])
+def enviar_mensaje():
+    if 'logged_in' in session:  # Verifica si el usuario está autenticado
+        emisor_id = session['usuario_id']  # ID del usuario emisor
+        correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
+        contenido = request.form.get('contenido')  # Contenido del mensaje
+
+        # Busca el ID del receptor basado en el correo
+        cursor = mydb.cursor()
+        query_receptor = "SELECT idAlumno FROM alumnos WHERE correo = %s"
+        cursor.execute(query_receptor, (correo_receptor,))
+        receptor = cursor.fetchone()
+        
+        if receptor:
+            receptor_id = receptor[0]  # Extrae el ID del receptor
+
+            # Inserta el mensaje en la base de datos
+            query_mensaje = "INSERT INTO mensajes (idEmisor, idReceptor, contenido) VALUES (%s, %s, %s)"
+            cursor.execute(query_mensaje, (emisor_id, receptor_id, contenido))
+            mydb.commit()
+            cursor.close()
+
+            flash("Mensaje enviado correctamente!")
+            return redirect(url_for('dashboard'))  # Redirige al dashboard o a donde desees
+        else:
+            cursor.close()
+            flash("El correo del receptor no existe.")
+            return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si no encuentra el receptor
+    else:
+        flash("Debes iniciar sesión para enviar mensajes.")
+        return redirect(url_for('login_render'))
+
+@app.route('/mensajes/recibidos')
+def mensajes_recibidos():
+    if 'logged_in' in session:
+        receptor_id = session['usuario_id']  # ID del usuario que está viendo sus mensajes
+
+        cursor = mydb.cursor()
+        query_mensajes = '''
+            SELECT m.contenido, a.nombre, a.apellido, m.fecha
+            FROM mensajes m
+            JOIN alumnos a ON m.idEmisor = a.idAlumno
+            WHERE m.idReceptor = %s
+            ORDER BY m.fecha DESC
+        '''
+        cursor.execute(query_mensajes, (receptor_id,))
+        mensajes = cursor.fetchall()  # Recupera todos los mensajes recibidos
+        cursor.close()
+
+        return render_template('mensajes_recibidos.html', mensajes=mensajes)
+    else:
+        flash("Debes iniciar sesión para ver tus mensajes.")
+        return redirect(url_for('login_render'))
+
 @app.route('/autenticacion/registro-usuario')
 def registro_usuario():
     return render_template('registro-usuario.html')
