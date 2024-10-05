@@ -76,22 +76,17 @@ def agregar_usuario():
             # Hashing de la contraseña
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-            # Abrimos el cursor y empezamos la transacción
+            # Almacenamos el hash como texto, decodificando de bytes a una cadena de texto
             cursor = mydb.cursor()
-            
             query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
-            values = (nombre, apellido, correo, codigo, hashed_password)
+            values = (nombre, apellido, correo, codigo, hashed_password.decode('utf-8'))  # decode to store as text
             cursor.execute(query, values)
-
-            # Confirmamos la transacción si no ocurre ningún error
             mydb.commit()
-
             cursor.close()
 
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
         
         except Exception as e:
-            # En caso de error, deshacemos la transacción
             mydb.rollback()
             flash(f"Error al realizar el registro: {e}")
         
