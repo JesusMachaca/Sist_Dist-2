@@ -71,21 +71,16 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
-            password = request.form['password']
+            password = request.form['password']  # Contraseña en texto plano
 
-            # Hashing de la contraseña
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-            # Almacenamos el hash como texto, decodificando de bytes a una cadena de texto
+            # Inserción de la contraseña tal como está (sin hashear)
             cursor = mydb.cursor()
             query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
-            values = (nombre, apellido, correo, codigo, hashed_password.decode('utf-8'))  # decode to store as text
-            cursor.execute(query, values)
+            cursor.execute(query, (nombre, apellido, correo, codigo, password))
             mydb.commit()
             cursor.close()
 
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
-        
         except Exception as e:
             mydb.rollback()
             flash(f"Error al realizar el registro: {e}")
@@ -96,12 +91,12 @@ def agregar_usuario():
 def login_render():
     return render_template('loginFace.html')
 
-@app.route('/autenticacion/login', methods=['GET', 'POST'])
+@app.route('/autenticacion/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
-        password = request.form['password']
+        password = request.form['password']  # Contraseña ingresada por el usuario
 
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
@@ -110,14 +105,8 @@ def login():
         cursor.close()
 
         if alumno:
-            hashed_password = alumno[4]  # El hash de la contraseña de la base de datos
-
-            # Asegúrate de que hashed_password esté en formato bytes
-            if isinstance(hashed_password, str):
-                hashed_password = hashed_password.encode('utf-8')  # Convertir el hash a bytes
-
-            # Comprobar la contraseña ingresada
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password):
+            stored_password = alumno[4]  # Contraseña almacenada en texto plano
+            if password == stored_password:  # Comparar directamente las contraseñas en texto plano
                 session['logged_in'] = True
                 session['usuario_id'] = alumno[0]
                 session['nombre'] = alumno[1]
@@ -127,7 +116,7 @@ def login():
                 flash("Contraseña incorrecta")
         else:
             flash("Usuario no encontrado")
-
+        
     return render_template('loginFace.html')
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
