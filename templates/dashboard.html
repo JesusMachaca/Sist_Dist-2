@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row content-md-center">
         <!-- Columna con datos de perfil -->
-        <div class="col">
+        <div class="col-md-4 mb-4">
             <div class="card card-body">
                 <h3 class="card-title">Datos de perfil</h3>
                 <div class="row content-md-center">
@@ -33,9 +33,9 @@
         </div>
 
         <!-- Columna con registro de publicaciones y sesiones -->
-        <div class="col">
+        <div class="col-md-8">
             <!-- Registro de publicaciones -->
-            <div class="card card-body">
+            <div class="card card-body mb-4">
                 <h3 class="card-title">Registro de publicaciones</h3>
                 <table class="table table-hover">
                     <thead>
@@ -63,7 +63,7 @@
             </div>
 
             <!-- Registro de sesiones -->
-            <div class="card card-body">
+            <div class="card card-body mb-4">
                 <h3 class="card-title">Registro de Sesiones</h3>
                 <table class="table table-hover">
                     <thead>
@@ -91,7 +91,7 @@
             </div>
 
             <!-- Enviar mensaje directo -->
-            <div class="card card-body">
+            <div class="card card-body mb-4">
                 <h3 class="card-title">Enviar un mensaje directo</h3>
                 <form action="/mensajes/enviar" method="POST">
                     <div class="form-group">
@@ -107,7 +107,7 @@
             </div>
 
             <!-- Mensajes recibidos -->
-            <div class="card card-body mt-4">
+            <div class="card card-body mb-4">
                 <h3 class="card-title">Mensajes recibidos</h3>
                 {% if mensajes %}
                 <table class="table table-hover">
