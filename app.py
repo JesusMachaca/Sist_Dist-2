@@ -96,47 +96,35 @@ def agregar_usuario():
 def login_render():
     return render_template('loginFace.html')
 
-@app.route('/autenticacion/login', methods=['POST', 'GET'])
+@app.route('/autenticacion/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
-        password = request.form['password']  # Esto viene del formulario HTML
+        password = request.form['password']
 
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
-        values = (correo, codigo)
-        cursor.execute(query, values)
+        cursor.execute(query, (correo, codigo))
         alumno = cursor.fetchone()
         cursor.close()
 
         if alumno:
-            hashed_password = alumno[4]  # Asegúrate de que 'contraseña' esté en la columna 5
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
-                fecha = str(datetime.datetime.now())
-
-                try:
-                    cursor = mydb.cursor()
-                    idAlumno = alumno[0]
-
-                    query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
-                    values = (idAlumno, fecha)
-                    cursor.execute(query, values)
-                    cursor.close()
-
-                    session['logged_in'] = True
-                    session['usuario_id'] = alumno[0]
-                    session['nombre'] = alumno[1]
-                    flash("Inicio de sesión exitoso!")
-                    return redirect(url_for('dashboard'))
-                except Exception as e:
-                    flash(f"Error al registrar Log: {e}")
+            hashed_password = alumno[4]  # Asegúrate de que este hash sea un string
+            # NO necesitamos hacer .encode() si hashed_password ya es string
+            if bcrypt.checkpw(password.encode('utf-8'), hashed_password):  
+                session['logged_in'] = True
+                session['usuario_id'] = alumno[0]
+                session['nombre'] = alumno[1]
+                flash("Inicio de sesión exitoso!")
+                return redirect(url_for('dashboard'))
             else:
                 flash("Contraseña incorrecta")
         else:
-            flash("Error de autenticación")
-            
+            flash("Usuario no encontrado")
+        
     return render_template('loginFace.html')
+
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
 def logout():
