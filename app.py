@@ -88,11 +88,11 @@ def enviar_mensaje():
             else:
                 cursor.close()
                 flash("El correo del receptor no existe.")
-                return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si no encuentra el receptor
+                return redirect(url_for('dashboard'))  # Redirige al dashboard si hay un error
         except Exception as e:
             mydb.rollback()  # Hacemos rollback en caso de error
             flash(f"Error al enviar el mensaje: {e}")
-            return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si hay un error
+            return redirect(url_for('dashboard'))  # Redirige al dashboard si hay un error
     else:
         flash("Debes iniciar sesión para enviar mensajes.")
         return redirect(url_for('login_render'))
