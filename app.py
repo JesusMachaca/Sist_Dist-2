@@ -71,22 +71,30 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
-            password = request.form['password']  # Aquí está correcto porque es el nombre en el formulario
+            password = request.form['password']
 
             # Hashing de la contraseña
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
+            # Abrimos el cursor y empezamos la transacción
             cursor = mydb.cursor()
+            
             query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
             values = (nombre, apellido, correo, codigo, hashed_password)
             cursor.execute(query, values)
+
+            # Confirmamos la transacción si no ocurre ningún error
             mydb.commit()
+
             cursor.close()
 
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
+        
         except Exception as e:
-            flash("Error al realizar el registro: {}".format(e))
-
+            # En caso de error, deshacemos la transacción
+            mydb.rollback()
+            flash(f"Error al realizar el registro: {e}")
+        
     return render_template('registro-usuario.html')
 
 @app.route('/autenticacion/login-face')
