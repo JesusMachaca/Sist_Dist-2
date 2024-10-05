@@ -99,8 +99,8 @@ def login():
         password = request.form['password']  # Contraseña ingresada por el usuario
 
         cursor = mydb.cursor()
-        query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
-        cursor.execute(query, (correo, codigo))
+        query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s AND contraseña = %s"
+        cursor.execute(query, (correo, codigo, password))
         alumno = cursor.fetchone()
         cursor.close()
 
