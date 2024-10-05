@@ -111,7 +111,7 @@ def login():
         cursor.close()
 
         if alumno:
-            stored_password = alumno[4]  # La contraseña almacenada en la base de datos
+            stored_password = alumno[5]  # La contraseña almacenada en la base de datos
             if password == stored_password:  # Comparar directamente las contraseñas
                 session['logged_in'] = True
                 session['usuario_id'] = alumno[0]
