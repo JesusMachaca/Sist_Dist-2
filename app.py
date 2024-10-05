@@ -96,7 +96,7 @@ def agregar_usuario():
 def login_render():
     return render_template('loginFace.html')
 
-@app.route('/autenticacion/login', methods=['GET', 'POST'])
+@app.route('/autenticacion/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         correo = request.form['correo']
@@ -110,7 +110,13 @@ def login():
         cursor.close()
 
         if alumno:
-            hashed_password = alumno[4]
+            hashed_password = alumno[4]  # El hash de la contraseña de la base de datos
+
+            # Asegúrate de que hashed_password esté en formato bytes
+            if isinstance(hashed_password, str):
+                hashed_password = hashed_password.encode('utf-8')  # Convertir el hash a bytes
+
+            # Comprobar la contraseña ingresada
             if bcrypt.checkpw(password.encode('utf-8'), hashed_password):
                 session['logged_in'] = True
                 session['usuario_id'] = alumno[0]
@@ -122,7 +128,6 @@ def login():
         else:
             flash("Usuario no encontrado")
 
-    # Si el método es GET, se muestra el formulario de inicio de sesión
     return render_template('loginFace.html')
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
