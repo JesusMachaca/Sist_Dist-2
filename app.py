@@ -59,6 +59,7 @@ def agregar_publicacion():
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
 
+
 @app.route('/mensajes/enviar', methods=['POST'])
 def enviar_mensaje():
     if 'logged_in' in session:  # Verifica si el usuario está autenticado
@@ -112,6 +113,7 @@ def mensajes_recibidos():
     else:
         flash("Debes iniciar sesión para ver tus mensajes.")
         return redirect(url_for('login_render'))
+
 
 @app.route('/autenticacion/registro-usuario')
 def registro_usuario():
