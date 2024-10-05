@@ -91,7 +91,7 @@ def agregar_usuario():
 def login_render():
     return render_template('loginFace.html')
 
-@app.route('/autenticacion/login', methods=['POST'])
+@app.route('/autenticacion/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         correo = request.form['correo']
