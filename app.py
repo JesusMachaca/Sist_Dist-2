@@ -220,9 +220,21 @@ def dashboard():
             query = "SELECT nombre, apellido, correo FROM alumnos WHERE idAlumno = %s"
             cursor.execute(query, (idAlumno,))
             usuario = cursor.fetchone()
+
+            # Recuperar mensajes recibidos
+            query_mensajes = '''
+                SELECT m.contenido, a.nombre, a.apellido, m.fecha
+                FROM mensajes m
+                JOIN alumnos a ON m.idEmisor = a.idAlumno
+                WHERE m.idReceptor = %s
+                ORDER BY m.fecha DESC
+            '''
+            cursor.execute(query_mensajes, (idAlumno,))
+            mensajes = cursor.fetchall()
+
             cursor.close()
 
-            return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario)
+            return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario, mensajes=mensajes)
         except Exception as e:
             flash(f"Error al cargar el dashboard: {e}")
             return redirect(url_for('login_render'))
