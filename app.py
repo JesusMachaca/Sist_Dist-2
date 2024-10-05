@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 import datetime
 import psycopg2
+import bcrypt
 
 app = Flask(__name__)
 app.secret_key = "mysecretkey"
@@ -70,10 +71,14 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
+            password = request.form['password']
+
+            # Hashing de la contraseña
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
             cursor = mydb.cursor()
-            query = "INSERT INTO alumnos (nombre, apellido, correo, codigo) VALUES (%s, %s, %s, %s)"
-            values = (nombre, apellido, correo, codigo)
+            query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contrasena) VALUES (%s, %s, %s, %s, %s)"
+            values = (nombre, apellido, correo, codigo, hashed_password)
             cursor.execute(query, values)
             mydb.commit()
             cursor.close()
@@ -93,6 +98,8 @@ def login():
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
+        password = request.form['password']
+
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
         values = (correo, codigo)
@@ -101,28 +108,33 @@ def login():
         cursor.close()
 
         if alumno:
-            fecha = str(datetime.datetime.now())
+            hashed_password = alumno[4]  # Suponiendo que la contraseña está en la columna 5
+            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+                fecha = str(datetime.datetime.now())
 
-            try:
-                cursor = mydb.cursor()
-                idAlumno = alumno[0]
+                try:
+                    cursor = mydb.cursor()
+                    idAlumno = alumno[0]
 
-                query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
-                values = (idAlumno, fecha)
-                cursor.execute(query, values)
-                cursor.close()
+                    query = "INSERT INTO logs (idAlumno, fecha) VALUES (%s, %s)"
+                    values = (idAlumno, fecha)
+                    cursor.execute(query, values)
+                    cursor.close()
 
-                session['logged_in'] = True
-                session['usuario_id'] = alumno[0]
-                session['nombre'] = alumno[1]
-                flash("Inicio de sesión exitoso!")
-                return redirect(url_for('dashboard'))
-            except Exception as e:
-                flash(f"Error al registrar Log: {e}")
+                    session['logged_in'] = True
+                    session['usuario_id'] = alumno[0]
+                    session['nombre'] = alumno[1]
+                    flash("Inicio de sesión exitoso!")
+                    return redirect(url_for('dashboard'))
+                except Exception as e:
+                    flash(f"Error al registrar Log: {e}")
+            else:
+                flash("Contraseña incorrecta")
         else:
             flash("Error de autenticación")
-
+            
     return render_template('loginFace.html')
+
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
 def logout():
