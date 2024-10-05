@@ -71,12 +71,15 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
-            password = request.form['password']  # Contraseña en texto plano
+            password = request.form['password']
 
-            # Inserción de la contraseña tal como está (sin hashear)
+            # Hasheamos la contraseña antes de almacenarla
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            # Guardamos la contraseña hasheada en la base de datos
             cursor = mydb.cursor()
             query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
-            cursor.execute(query, (nombre, apellido, correo, codigo, password))
+            cursor.execute(query, (nombre, apellido, correo, codigo, hashed_password.decode('utf-8')))
             mydb.commit()
             cursor.close()
 
@@ -94,25 +97,30 @@ def login_render():
 @app.route('/autenticacion/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        correo = request.form.get('correo')  # Obtén el valor del campo 'correo'
-        codigo = request.form.get('codigo')  # Obtén el valor del campo 'codigo'
-        password = request.form.get('password')  # Obtén el valor del campo 'password' (contraseña)
+        correo = request.form.get('correo')  # Obtén el correo ingresado
+        codigo = request.form.get('codigo')  # Obtén el código ingresado
+        password = request.form.get('password')  # Obtén la contraseña ingresada
 
-        # Asegúrate de que todos los campos estén obteniendo sus valores correctamente
         if not correo or not codigo or not password:
             flash("Todos los campos son obligatorios.")
             return render_template('loginFace.html')
 
-        # Consulta para obtener los datos del usuario
+        # Consulta para recuperar al usuario en base al correo y código
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
         cursor.execute(query, (correo, codigo))
-        alumno = cursor.fetchone()
+        alumno = cursor.fetchone()  # Recupera la fila completa del alumno
         cursor.close()
 
         if alumno:
-            stored_password = alumno[5]  # La contraseña almacenada en la base de datos
-            if password == stored_password:  # Comparar directamente las contraseñas
+            stored_password = alumno[5]  # Ahora la contraseña está en la columna correcta (índice 5)
+            
+            # Asegúrate de que stored_password sea una cadena antes de compararla
+            if isinstance(stored_password, str):
+                stored_password = stored_password.encode('utf-8')  # Convertimos a bytes
+
+            # Comparamos la contraseña ingresada con el hash almacenado
+            if bcrypt.checkpw(password.encode('utf-8'), stored_password):  # Comparación usando bcrypt
                 session['logged_in'] = True
                 session['usuario_id'] = alumno[0]
                 session['nombre'] = alumno[1]
@@ -122,7 +130,7 @@ def login():
                 flash("Contraseña incorrecta")
         else:
             flash("Usuario no encontrado")
-        
+
     return render_template('loginFace.html')
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
