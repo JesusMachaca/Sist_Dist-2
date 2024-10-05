@@ -53,12 +53,12 @@ def agregar_publicacion():
 
                 flash("Se ha registrado de manera correcta!")
             except Exception as e:
+                mydb.rollback()  # Aseguramos que cualquier error haga un rollback
                 flash(f"Error al realizar el registro: {e}")
         return redirect(url_for('page_registro_publicacion'))
     else:
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
-
 
 @app.route('/mensajes/enviar', methods=['POST'])
 def enviar_mensaje():
@@ -67,27 +67,32 @@ def enviar_mensaje():
         correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
         contenido = request.form.get('contenido')  # Contenido del mensaje
 
-        # Busca el ID del receptor basado en el correo
-        cursor = mydb.cursor()
-        query_receptor = "SELECT idAlumno FROM alumnos WHERE correo = %s"
-        cursor.execute(query_receptor, (correo_receptor,))
-        receptor = cursor.fetchone()
+        try:
+            # Busca el ID del receptor basado en el correo
+            cursor = mydb.cursor()
+            query_receptor = "SELECT idAlumno FROM alumnos WHERE correo = %s"
+            cursor.execute(query_receptor, (correo_receptor,))
+            receptor = cursor.fetchone()
         
-        if receptor:
-            receptor_id = receptor[0]  # Extrae el ID del receptor
+            if receptor:
+                receptor_id = receptor[0]  # Extrae el ID del receptor
 
-            # Inserta el mensaje en la base de datos
-            query_mensaje = "INSERT INTO mensajes (idEmisor, idReceptor, contenido) VALUES (%s, %s, %s)"
-            cursor.execute(query_mensaje, (emisor_id, receptor_id, contenido))
-            mydb.commit()
-            cursor.close()
+                # Inserta el mensaje en la base de datos
+                query_mensaje = "INSERT INTO mensajes (idEmisor, idReceptor, contenido) VALUES (%s, %s, %s)"
+                cursor.execute(query_mensaje, (emisor_id, receptor_id, contenido))
+                mydb.commit()
+                cursor.close()
 
-            flash("Mensaje enviado correctamente!")
-            return redirect(url_for('dashboard'))  # Redirige al dashboard o a donde desees
-        else:
-            cursor.close()
-            flash("El correo del receptor no existe.")
-            return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si no encuentra el receptor
+                flash("Mensaje enviado correctamente!")
+                return redirect(url_for('dashboard'))  # Redirige al dashboard o a donde desees
+            else:
+                cursor.close()
+                flash("El correo del receptor no existe.")
+                return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si no encuentra el receptor
+        except Exception as e:
+            mydb.rollback()  # Hacemos rollback en caso de error
+            flash(f"Error al enviar el mensaje: {e}")
+            return redirect(url_for('enviar_mensaje_form'))  # Redirige al formulario si hay un error
     else:
         flash("Debes iniciar sesión para enviar mensajes.")
         return redirect(url_for('login_render'))
@@ -96,24 +101,26 @@ def enviar_mensaje():
 def mensajes_recibidos():
     if 'logged_in' in session:
         receptor_id = session['usuario_id']  # ID del usuario que está viendo sus mensajes
+        try:
+            cursor = mydb.cursor()
+            query_mensajes = '''
+                SELECT m.contenido, a.nombre, a.apellido, m.fecha
+                FROM mensajes m
+                JOIN alumnos a ON m.idEmisor = a.idAlumno
+                WHERE m.idReceptor = %s
+                ORDER BY m.fecha DESC
+            '''
+            cursor.execute(query_mensajes, (receptor_id,))
+            mensajes = cursor.fetchall()  # Recupera todos los mensajes recibidos
+            cursor.close()
 
-        cursor = mydb.cursor()
-        query_mensajes = '''
-            SELECT m.contenido, a.nombre, a.apellido, m.fecha
-            FROM mensajes m
-            JOIN alumnos a ON m.idEmisor = a.idAlumno
-            WHERE m.idReceptor = %s
-            ORDER BY m.fecha DESC
-        '''
-        cursor.execute(query_mensajes, (receptor_id,))
-        mensajes = cursor.fetchall()  # Recupera todos los mensajes recibidos
-        cursor.close()
-
-        return render_template('mensajes_recibidos.html', mensajes=mensajes)
+            return render_template('mensajes_recibidos.html', mensajes=mensajes)
+        except Exception as e:
+            flash(f"Error al consultar mensajes: {e}")
+            return redirect(url_for('dashboard'))
     else:
         flash("Debes iniciar sesión para ver tus mensajes.")
         return redirect(url_for('login_render'))
-
 
 @app.route('/autenticacion/registro-usuario')
 def registro_usuario():
@@ -141,7 +148,7 @@ def agregar_usuario():
 
             flash('Usuario agregado de manera correcta: {}'.format(nombre))
         except Exception as e:
-            mydb.rollback()
+            mydb.rollback()  # Hacemos rollback en caso de error
             flash(f"Error al realizar el registro: {e}")
         
     return render_template('registro-usuario.html')
@@ -161,31 +168,34 @@ def login():
             flash("Todos los campos son obligatorios.")
             return render_template('loginFace.html')
 
-        # Consulta para recuperar al usuario en base al correo y código
-        cursor = mydb.cursor()
-        query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
-        cursor.execute(query, (correo, codigo))
-        alumno = cursor.fetchone()  # Recupera la fila completa del alumno
-        cursor.close()
+        try:
+            # Consulta para recuperar al usuario en base al correo y código
+            cursor = mydb.cursor()
+            query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
+            cursor.execute(query, (correo, codigo))
+            alumno = cursor.fetchone()  # Recupera la fila completa del alumno
+            cursor.close()
 
-        if alumno:
-            stored_password = alumno[5]  # Ahora la contraseña está en la columna correcta (índice 5)
-            
-            # Asegúrate de que stored_password sea una cadena antes de compararla
-            if isinstance(stored_password, str):
-                stored_password = stored_password.encode('utf-8')  # Convertimos a bytes
+            if alumno:
+                stored_password = alumno[5]  # Ahora la contraseña está en la columna correcta (índice 5)
+                
+                # Asegúrate de que stored_password sea una cadena antes de compararla
+                if isinstance(stored_password, str):
+                    stored_password = stored_password.encode('utf-8')  # Convertimos a bytes
 
-            # Comparamos la contraseña ingresada con el hash almacenado
-            if bcrypt.checkpw(password.encode('utf-8'), stored_password):  # Comparación usando bcrypt
-                session['logged_in'] = True
-                session['usuario_id'] = alumno[0]
-                session['nombre'] = alumno[1]
-                flash("Inicio de sesión exitoso!")
-                return redirect(url_for('dashboard'))
+                # Comparamos la contraseña ingresada con el hash almacenado
+                if bcrypt.checkpw(password.encode('utf-8'), stored_password):  # Comparación usando bcrypt
+                    session['logged_in'] = True
+                    session['usuario_id'] = alumno[0]
+                    session['nombre'] = alumno[1]
+                    flash("Inicio de sesión exitoso!")
+                    return redirect(url_for('dashboard'))
+                else:
+                    flash("Contraseña incorrecta")
             else:
-                flash("Contraseña incorrecta")
-        else:
-            flash("Usuario no encontrado")
+                flash("Usuario no encontrado")
+        except Exception as e:
+            flash(f"Error al iniciar sesión: {e}")
 
     return render_template('loginFace.html')
 
@@ -204,14 +214,18 @@ def dashboard():
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
 
-        # Recuperar información del perfil del usuario
-        cursor = mydb.cursor()
-        query = "SELECT nombre, apellido, correo FROM alumnos WHERE idAlumno = %s"
-        cursor.execute(query, (idAlumno,))
-        usuario = cursor.fetchone()
-        cursor.close()
+        try:
+            # Recuperar información del perfil del usuario
+            cursor = mydb.cursor()
+            query = "SELECT nombre, apellido, correo FROM alumnos WHERE idAlumno = %s"
+            cursor.execute(query, (idAlumno,))
+            usuario = cursor.fetchone()
+            cursor.close()
 
-        return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario)
+            return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario)
+        except Exception as e:
+            flash(f"Error al cargar el dashboard: {e}")
+            return redirect(url_for('login_render'))
     else:
         flash("Debe iniciar sesión para acceder al dashboard.")
         return redirect(url_for('login_render'))
