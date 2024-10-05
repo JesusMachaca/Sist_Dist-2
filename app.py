@@ -8,10 +8,10 @@ app.secret_key = "mysecretkey"
 
 # Configuración de conexión para PostgreSQL
 conn_str = {
-    "host": "dpg-cqarlkuehbks73de8dlg-a.oregon-postgres.render.com",
-    "database": "bdfisitweet",
-    "user": "grupo_app",
-    "password": "4fPiWKsmtrNfCeHEEo2jBVIP7jvLGAn3"
+    "host": "dpg-crnlv5l6l47c73ai705g-a.oregon-postgres.render.com",
+    "database": "fisi_tweet",
+    "user": "root",
+    "password": "ROCR5iWHfufiDIHTQPNohyXiWFlooPhX"
 }
 
 # Conexión a la base de datos PostgreSQL
