@@ -90,7 +90,7 @@
                 </table>
             </div>
 
-            <!-- Nueva sección: Enviar mensaje directo -->
+            <!-- Enviar mensaje directo -->
             <div class="card card-body">
                 <h3 class="card-title">Enviar un mensaje directo</h3>
                 <form action="/mensajes/enviar" method="POST">
@@ -106,10 +106,33 @@
                 </form>
             </div>
 
-            <!-- Nueva sección: Ver mensajes recibidos -->
-            <div class="card card-body mt-3">
-                <h3 class="card-title">Ver mensajes directos recibidos</h3>
-                <a href="{{ url_for('mensajes_recibidos') }}" class="btn btn-secondary">Ver mensajes</a>
+            <!-- Mensajes recibidos -->
+            <div class="card card-body mt-4">
+                <h3 class="card-title">Mensajes recibidos</h3>
+                {% if mensajes %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr class="table-primary">
+                            <th scope="col">Mensaje</th>
+                            <th scope="col">De</th>
+                            <th scope="col">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mensaje in mensajes %}
+                        <tr class="table-light">
+                            <td>{{ mensaje[0] }}</td>
+                            <td>{{ mensaje[1] }} {{ mensaje[2] }}</td>
+                            <td>{{ mensaje[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-warning">
+                    No has recibido mensajes directos.
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
