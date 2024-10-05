@@ -71,13 +71,13 @@ def agregar_usuario():
             apellido = request.form['apellido']
             correo = request.form['correo']
             codigo = request.form['codigo']
-            password = request.form['password']
+            contraseña = request.form['contraseña']
 
             # Hashing de la contraseña
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            hashed_password = bcrypt.hashpw(contraseña.encode('utf-8'), bcrypt.gensalt())
 
             cursor = mydb.cursor()
-            query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contrasena) VALUES (%s, %s, %s, %s, %s)"
+            query = "INSERT INTO alumnos (nombre, apellido, correo, codigo, contraseña) VALUES (%s, %s, %s, %s, %s)"
             values = (nombre, apellido, correo, codigo, hashed_password)
             cursor.execute(query, values)
             mydb.commit()
@@ -98,7 +98,7 @@ def login():
     if request.method == 'POST':
         correo = request.form['correo']
         codigo = request.form['codigo']
-        password = request.form['password']
+        contraseña = request.form['contraseña']
 
         cursor = mydb.cursor()
         query = "SELECT * FROM alumnos WHERE correo = %s AND codigo = %s"
@@ -109,7 +109,7 @@ def login():
 
         if alumno:
             hashed_password = alumno[4]  # Suponiendo que la contraseña está en la columna 5
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+            if bcrypt.checkpw(contraseña.encode('utf-8'), hashed_password.encode('utf-8')):
                 fecha = str(datetime.datetime.now())
 
                 try:
