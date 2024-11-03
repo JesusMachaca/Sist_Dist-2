@@ -1,4 +1,4 @@
-import os
+    import os
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 import datetime
 import psycopg2
@@ -9,10 +9,10 @@ app.secret_key = "mysecretkey"
 
 # Configuración de conexión para PostgreSQL
 conn_str = {
-    "host": "dpg-crnlv5l6l47c73ai705g-a.oregon-postgres.render.com",
-    "database": "fisi_tweet",
-    "user": "root",
-    "password": "ROCR5iWHfufiDIHTQPNohyXiWFlooPhX"
+    "host": "dpg-csjdsrpu0jms73b160tg-a.oregon-postgres.render.com",
+    "database": "fisi_tweet_xoja",
+    "user": "fisi_tweet",
+    "password": "pOQvJ4ROVEDplJpTRw3aOUH9exSMDNce"
 }
 
 # Conexión a la base de datos PostgreSQL
