@@ -7,8 +7,6 @@ import bcrypt
 app = Flask(__name__)
 app.secret_key = "mysecretkey"
 
-global mydb
-
 # Configuración de conexión para PostgreSQL
 conn_str = {
     "host": "dpg-csjdsrpu0jms73b160tg-a.oregon-postgres.render.com",
@@ -39,7 +37,6 @@ def page_registro_publicacion():
 
 @app.route('/publicaciones/agregar-publicacion', methods=['POST'])
 def agregar_publicacion():
-    global mydb
     if 'logged_in' in session:
         if request.method == 'POST':
             try:
@@ -65,7 +62,6 @@ def agregar_publicacion():
 
 @app.route('/mensajes/enviar', methods=['POST'])
 def enviar_mensaje():
-    global mydb
     if 'logged_in' in session:  # Verifica si el usuario está autenticado
         emisor_id = session['usuario_id']  # ID del usuario emisor
         correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
@@ -103,7 +99,6 @@ def enviar_mensaje():
 
 @app.route('/mensajes/recibidos')
 def mensajes_recibidos():
-    global mydb
     if 'logged_in' in session:
         receptor_id = session['usuario_id']  # ID del usuario que está viendo sus mensajes
         try:
@@ -133,7 +128,6 @@ def registro_usuario():
 
 @app.route('/autenticacion/agregar-usuario', methods=['POST'])
 def agregar_usuario():
-    global mydb
     if request.method == 'POST':
         try:
             nombre = request.form['nombre']
@@ -165,7 +159,6 @@ def login_render():
 
 @app.route('/autenticacion/login', methods=['GET', 'POST'])
 def login():
-    global mydb
     if request.method == 'POST':
         correo = request.form.get('correo')  # Obtén el correo ingresado
         codigo = request.form.get('codigo')  # Obtén el código ingresado
@@ -208,7 +201,6 @@ def login():
 
 @app.route('/autenticacion/logout', methods=['POST', 'GET'])
 def logout():
-    global mydb
     session.pop('logged_in', None)
     session.pop('usuario_id', None)
     session.pop('nombre', None)
@@ -217,7 +209,6 @@ def logout():
 
 @app.route('/autenticacion/dashboard')
 def dashboard():
-    global mydb
     if 'logged_in' in session:
         idAlumno = session['usuario_id']
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
@@ -253,7 +244,6 @@ def dashboard():
 
 def consultarTodasPublicaciones():
     try:
-        global mydb
         cursor = mydb.cursor()
         query = '''
             SELECT alumnos.nombre, alumnos.correo, publicaciones.contenido, publicaciones.fecha
@@ -271,7 +261,6 @@ def consultarTodasPublicaciones():
 
 def consultarPublicaciones(idAlumno):
     try:
-        global mydb
         cursor = mydb.cursor()
         query = '''
             SELECT contenido, fecha
@@ -288,7 +277,6 @@ def consultarPublicaciones(idAlumno):
 
 def consultarSesiones(idAlumno):
     try:
-        global mydb
         cursor = mydb.cursor()
         query = '''
             SELECT idLog, fecha
