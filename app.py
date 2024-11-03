@@ -7,6 +7,8 @@ import bcrypt
 app = Flask(__name__)
 app.secret_key = "mysecretkey"
 
+global mydb
+
 # Configuración de conexión para PostgreSQL
 conn_str = {
     "host": "dpg-csjdsrpu0jms73b160tg-a.oregon-postgres.render.com",
