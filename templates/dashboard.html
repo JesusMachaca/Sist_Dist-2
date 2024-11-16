@@ -69,8 +69,17 @@
                 <h3 class="card-title">Enviar un mensaje directo</h3>
                 <form action="/mensajes/enviar" method="POST">
                     <div class="form-group">
-                        <label for="correo_receptor">Correo del destinatario:</label>
-                        <input type="email" id="correo_receptor" name="correo_receptor" class="form-control" placeholder="Correo del destinatario" required>
+                        <label for="correo_receptor">Seleccionar destinatario:</label>
+                        <select id="correo_receptor" name="correo_receptor" class="form-control" required>
+                            <option value="" disabled selected>Selecciona un destinatario</option>
+                            {% if usuarios %}
+                            {% for usuario in usuarios %}
+                            <option value="{{ usuario[3] }}">{{ usuario[1] }} {{ usuario[2] }} ({{ usuario[3] }})</option>
+                            {% endfor %}
+                            {% else %}
+                            <option value="" disabled>No hay usuarios disponibles</option>
+                            {% endif %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="contenido">Mensaje:</label>
