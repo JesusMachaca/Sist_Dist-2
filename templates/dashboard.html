@@ -72,15 +72,12 @@
                     <div class="form-group">
                         <label for="correo_receptor">Seleccionar destinatario:</label>
                         <select id="correo_receptor" name="correo_receptor" class="form-control" required>
-                            <!-- Opción inicial -->
                             <option value="" disabled selected>Selecciona un destinatario</option>
-                            <!-- Opciones dinámicas -->
                             {% if usuarios %}
                             {% for usuario in usuarios %}
                             <option value="{{ usuario[3] }}">{{ usuario[1] }} {{ usuario[2] }} ({{ usuario[3] }})</option>
                             {% endfor %}
                             {% else %}
-                            <!-- Si no hay usuarios -->
                             <option value="" disabled>No hay usuarios disponibles</option>
                             {% endif %}
                         </select>
