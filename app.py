@@ -308,6 +308,18 @@ def consultarSesiones(idAlumno):
         flash(f"Error al consultar sesiones: {e}")
         return None
 
+def consultarUsuarios():
+    try:
+        cursor = mydb.cursor()
+        query = "SELECT idAlumno, nombre, apellido, correo FROM alumnos"
+        cursor.execute(query)
+        usuarios = cursor.fetchall()
+        cursor.close()
+        return usuarios
+    except Exception as e:
+        flash(f"Error al consultar usuarios: {e}")
+        return []
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 3000))
     app.run(host="0.0.0.0", port=port, debug=True)
