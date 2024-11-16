@@ -62,7 +62,7 @@ def agregar_publicacion():
 
 @app.route('/mensajes/enviar', methods=['POST'])
 def enviar_mensaje():
-    if 'logged_in' in session:  # Verifica si el usuario está autenticado
+    if 'logged_in' in session:
         emisor_id = session['usuario_id']  # ID del usuario emisor
         correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
         contenido = request.form.get('contenido')  # Contenido del mensaje
@@ -84,15 +84,15 @@ def enviar_mensaje():
                 cursor.close()
 
                 flash("Mensaje enviado correctamente!")
-                return redirect(url_for('dashboard'))  # Redirige al dashboard o a donde desees
+                return redirect(url_for('dashboard'))  # Redirige al dashboard
             else:
                 cursor.close()
                 flash("El correo del receptor no existe.")
-                return redirect(url_for('dashboard'))  # Redirige al dashboard si hay un error
+                return redirect(url_for('dashboard'))
         except Exception as e:
-            mydb.rollback()  # Hacemos rollback en caso de error
+            mydb.rollback()
             flash(f"Error al enviar el mensaje: {e}")
-            return redirect(url_for('dashboard'))  # Redirige al dashboard si hay un error
+            return redirect(url_for('dashboard'))
     else:
         flash("Debes iniciar sesión para enviar mensajes.")
         return redirect(url_for('login_render'))
@@ -232,9 +232,20 @@ def dashboard():
             cursor.execute(query_mensajes, (idAlumno,))
             mensajes = cursor.fetchall()
 
+            # Obtener la lista de usuarios para el selector
+            usuarios = consultarUsuarios()
+
             cursor.close()
 
-            return render_template('dashboard.html', publicaciones=publicaciones, sesiones=sesiones, usuario=usuario, mensajes=mensajes)
+            # Pasar todos los datos necesarios al template
+            return render_template(
+                'dashboard.html',
+                publicaciones=publicaciones,
+                sesiones=sesiones,
+                usuario=usuario,
+                mensajes=mensajes,
+                usuarios=usuarios
+            )
         except Exception as e:
             flash(f"Error al cargar el dashboard: {e}")
             return redirect(url_for('login_render'))
