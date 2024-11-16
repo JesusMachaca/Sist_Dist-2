@@ -60,39 +60,45 @@ def agregar_publicacion():
         flash("Debe iniciar sesión para agregar una publicación.")
         return redirect(url_for('login_render'))
 
-@app.route('/mensajes/enviar', methods=['POST'])
+@app.route('/mensajes/enviar', methods=['GET', 'POST'])
 def enviar_mensaje():
     if 'logged_in' in session:
-        emisor_id = session['usuario_id']  # ID del usuario emisor
-        correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
-        contenido = request.form.get('contenido')  # Contenido del mensaje
+        if request.method == 'GET':
+            # Si se hace un GET, obtén todos los usuarios y retorna la página para enviar mensajes
+            usuarios = consultarUsuarios()  # Función para obtener usuarios
+            return render_template('dashboard.html', usuarios=usuarios)  # Renderiza el mismo dashboard
+        elif request.method == 'POST':
+            # Lógica para enviar el mensaje
+            emisor_id = session['usuario_id']  # ID del usuario emisor
+            correo_receptor = request.form.get('correo_receptor')  # Correo del usuario receptor
+            contenido = request.form.get('contenido')  # Contenido del mensaje
 
-        try:
-            # Busca el ID del receptor basado en el correo
-            cursor = mydb.cursor()
-            query_receptor = "SELECT idAlumno FROM alumnos WHERE correo = %s"
-            cursor.execute(query_receptor, (correo_receptor,))
-            receptor = cursor.fetchone()
-        
-            if receptor:
-                receptor_id = receptor[0]  # Extrae el ID del receptor
+            try:
+                # Busca el ID del receptor basado en el correo
+                cursor = mydb.cursor()
+                query_receptor = "SELECT idAlumno FROM alumnos WHERE correo = %s"
+                cursor.execute(query_receptor, (correo_receptor,))
+                receptor = cursor.fetchone()
 
-                # Inserta el mensaje en la base de datos
-                query_mensaje = "INSERT INTO mensajes (idEmisor, idReceptor, contenido) VALUES (%s, %s, %s)"
-                cursor.execute(query_mensaje, (emisor_id, receptor_id, contenido))
-                mydb.commit()
-                cursor.close()
+                if receptor:
+                    receptor_id = receptor[0]  # Extrae el ID del receptor
 
-                flash("Mensaje enviado correctamente!")
-                return redirect(url_for('dashboard'))  # Redirige al dashboard
-            else:
-                cursor.close()
-                flash("El correo del receptor no existe.")
+                    # Inserta el mensaje en la base de datos
+                    query_mensaje = "INSERT INTO mensajes (idEmisor, idReceptor, contenido) VALUES (%s, %s, %s)"
+                    cursor.execute(query_mensaje, (emisor_id, receptor_id, contenido))
+                    mydb.commit()
+                    cursor.close()
+
+                    flash("Mensaje enviado correctamente!")
+                    return redirect(url_for('dashboard'))  # Redirige al dashboard
+                else:
+                    cursor.close()
+                    flash("El correo del receptor no existe.")
+                    return redirect(url_for('dashboard'))
+            except Exception as e:
+                mydb.rollback()
+                flash(f"Error al enviar el mensaje: {e}")
                 return redirect(url_for('dashboard'))
-        except Exception as e:
-            mydb.rollback()
-            flash(f"Error al enviar el mensaje: {e}")
-            return redirect(url_for('dashboard'))
     else:
         flash("Debes iniciar sesión para enviar mensajes.")
         return redirect(url_for('login_render'))
