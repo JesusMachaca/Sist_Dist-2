@@ -19,6 +19,15 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        <!-- Formulario para subir nueva foto de perfil -->
+                        <form action="/perfil/subir-foto" method="POST" enctype="multipart/form-data" class="mt-3">
+                            <div class="form-group">
+                                <label for="foto_perfil">Cambiar foto de perfil:</label>
+                                <input type="file" id="foto_perfil" name="foto_perfil" class="form-control" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Subir Foto</button>
+                        </form>
                     </div>
                     <div class="col">
                         {% if usuario %}
@@ -65,8 +74,6 @@
                     </tbody>
                 </table>
             </div>
-
-
 
             <!-- Enviar mensaje directo -->
             <div class="card card-body mb-4">
