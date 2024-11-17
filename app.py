@@ -258,7 +258,7 @@ def consultarTodasPublicaciones():
     try:
         cursor = mydb.cursor()
         query = '''
-            SELECT alumnos.nombre, alumnos.correo, publicaciones.contenido, publicaciones.fecha
+            SELECT alumnos.nombre, alumnos.correo, publicaciones.contenido, publicaciones.fecha, alumnos.foto_perfil
             FROM alumnos
             JOIN publicaciones ON alumnos.idAlumno = publicaciones.idAlumno
             ORDER BY publicaciones.fecha DESC
