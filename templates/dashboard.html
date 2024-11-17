@@ -13,6 +13,16 @@
                             <div class="col-md-auto">
                                 <p>Foto de perfil</p>
                                 <img src="https://w7.pngwing.com/pngs/152/932/png-transparent-silhouette-person-graphy-silhouette-animals-rectangle-photography.png" alt="Foto de perfil" style="width: 300px; height: 300px; border-radius: 50%;">
+                                <div class="card card-body mb-4">
+                                    <h3 class="card-title">Actualizar Foto de Perfil</h3>
+                                    <form action="/perfil/subir-foto" method="POST" enctype="multipart/form-data">
+                                        <div class="form-group">
+                                            <label for="foto_perfil">Selecciona una foto:</label>
+                                            <input type="file" id="foto_perfil" name="foto_perfil" class="form-control" accept="image/*" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary mt-3">Subir Foto</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
