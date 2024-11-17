@@ -291,7 +291,7 @@ def dashboard():
                 publicaciones=publicaciones,
                 sesiones=sesiones,
                 usuario=usuario,
-                mensajes=mensajes
+                mensajes=mensajes,
                 usuarios=usuarios
             )
         except Exception as e:
