@@ -1,24 +1,43 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-
-<div class="col-auto">
-    {% if publicaciones %}
-        {% for publicacion in publicaciones %}
-            <div class="card card-body mb-3">
-                <h4 class="card-title">{{ publicacion[0] }}</h4>
-                <h6 class="card-subtitle mb-2 text-muted">{{ publicacion[1] }}</h6>
-                <p class="card-text">{{ publicacion[2] }}</p>
-                <p class="text-secondary"> ({{ publicacion[3] }})</p>
-            </div>
-        {% endfor %}
-    {% else %}
-        <div class="card card-body">
-            <h4 class="card-title">No hay publicaciones</h4>
-            <h6 class="card-subtitle mb-2 text-muted">-</h6>
-            <p class="card-text">-</p>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            {% if publicaciones %}
+                {% for publicacion in publicaciones %}
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                            <!-- Encabezado: Foto, Nombre y correo -->
+                            <div class="d-flex align-items-center mb-2">
+                                <!-- Foto de perfil -->
+                                <img src="https://w7.pngwing.com/pngs/152/932/png-transparent-silhouette-person-graphy-silhouette-animals-rectangle-photography.png" 
+                                     alt="Foto de perfil" 
+                                     class="rounded-circle me-3" 
+                                     style="width: 50px; height: 50px;">
+                                <!-- Nombre y correo -->
+                                <div>
+                                    <h5 class="mb-0">{{ publicacion[0] }}</h5>
+                                    <small class="text-muted">{{ publicacion[1] }}</small>
+                                </div>
+                            </div>
+                            <!-- Contenido de la publicación -->
+                            <p class="card-text">{{ publicacion[2] }}</p>
+                            <!-- Fecha -->
+                            <p class="text-muted small mb-0">{{ publicacion[3] }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h4 class="card-title">No hay publicaciones</h4>
+                        <p class="text-muted">Aún no se han agregado publicaciones. ¡Sé el primero en publicar algo!</p>
+                    </div>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
 </div>
-
 {% endblock %}
+
