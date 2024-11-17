@@ -221,9 +221,9 @@ def dashboard():
         sesiones = consultarSesiones(idAlumno=idAlumno)
 
         try:
-            # Recuperar información del perfil del usuario
+            # Recuperar información del perfil del usuario, incluyendo la foto
             cursor = mydb.cursor()
-            query = "SELECT nombre, apellido, correo FROM alumnos WHERE idAlumno = %s"
+            query = "SELECT nombre, apellido, correo, foto_perfil FROM alumnos WHERE idAlumno = %s"
             cursor.execute(query, (idAlumno,))
             usuario = cursor.fetchone()
 
@@ -238,19 +238,14 @@ def dashboard():
             cursor.execute(query_mensajes, (idAlumno,))
             mensajes = cursor.fetchall()
 
-            # Obtener la lista de usuarios para el selector
-            usuarios = consultarUsuarios()
-
             cursor.close()
 
-            # Pasar todos los datos necesarios al template
             return render_template(
                 'dashboard.html',
                 publicaciones=publicaciones,
                 sesiones=sesiones,
                 usuario=usuario,
-                mensajes=mensajes,
-                usuarios=usuarios
+                mensajes=mensajes
             )
         except Exception as e:
             flash(f"Error al cargar el dashboard: {e}")
