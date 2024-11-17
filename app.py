@@ -265,7 +265,7 @@ def dashboard():
         idAlumno = session['usuario_id']
         publicaciones = consultarPublicaciones(idAlumno=idAlumno)
         sesiones = consultarSesiones(idAlumno=idAlumno)
-
+        
         try:
             # Recuperar información del perfil del usuario, incluyendo la foto
             cursor = mydb.cursor()
@@ -284,6 +284,9 @@ def dashboard():
             cursor.execute(query_mensajes, (idAlumno,))
             mensajes = cursor.fetchall()
 
+            # Obtener la lista de usuarios para el selector
+            usuarios = consultarUsuarios()
+            
             cursor.close()
 
             return render_template(
