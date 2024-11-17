@@ -5,13 +5,13 @@ import psycopg2
 import bcrypt
 from werkzeug.utils import secure_filename
 
+app = Flask(__name__)
+app.secret_key = "mysecretkey"
+
 # Configuración para almacenar fotos de perfil
 UPLOAD_FOLDER = 'static/uploads/perfiles'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-app = Flask(__name__)
-app.secret_key = "mysecretkey"
 
 # Configuración de conexión para PostgreSQL
 conn_str = {
