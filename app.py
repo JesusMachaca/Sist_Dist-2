@@ -3,6 +3,12 @@ from flask import Flask, request, render_template, redirect, url_for, flash, ses
 import datetime
 import psycopg2
 import bcrypt
+from werkzeug.utils import secure_filename
+
+# Configuración para almacenar fotos de perfil
+UPLOAD_FOLDER = 'static/uploads/perfiles'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app = Flask(__name__)
 app.secret_key = "mysecretkey"
@@ -26,6 +32,46 @@ except Exception as e:
 def Index():
     publicaciones = consultarTodasPublicaciones()
     return render_template('index.html', publicaciones=publicaciones)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    
+@app.route('/perfil/subir-foto', methods=['POST'])
+def subir_foto():
+    if 'logged_in' in session:
+        if 'foto_perfil' not in request.files:
+            flash("No se seleccionó ningún archivo.")
+            return redirect(url_for('dashboard'))
+        
+        file = request.files['foto_perfil']
+        if file.filename == '':
+            flash("No se seleccionó ningún archivo.")
+            return redirect(url_for('dashboard'))
+        
+        if file and allowed_file(file.filename):
+            # Aseguramos el nombre del archivo
+            filename = secure_filename(file.filename)
+            # Ruta completa para guardar la imagen
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Guardar el archivo en la carpeta definida
+            file.save(filepath)
+            
+            # Actualizar la base de datos con la ruta del archivo
+            idAlumno = session['usuario_id']
+            cursor = mydb.cursor()
+            query = "UPDATE alumnos SET foto_perfil = %s WHERE idAlumno = %s"
+            cursor.execute(query, (f"/{filepath}", idAlumno))
+            mydb.commit()
+            cursor.close()
+
+            flash("Foto de perfil actualizada correctamente.")
+            return redirect(url_for('dashboard'))
+        else:
+            flash("El archivo no es válido. Asegúrate de subir una imagen.")
+            return redirect(url_for('dashboard'))
+    else:
+        flash("Debes iniciar sesión para realizar esta acción.")
+        return redirect(url_for('login_render'))
 
 @app.route('/publicaciones/registro-publicacion')
 def page_registro_publicacion():
