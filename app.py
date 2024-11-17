@@ -292,6 +292,7 @@ def dashboard():
                 sesiones=sesiones,
                 usuario=usuario,
                 mensajes=mensajes
+                usuarios=usuarios
             )
         except Exception as e:
             flash(f"Error al cargar el dashboard: {e}")
